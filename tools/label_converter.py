@@ -297,23 +297,30 @@ class LabelConverter:
         
         for dic_info in data["annotations"]:
 
-            bbox = dic_info["bbox"]
-            x_min = bbox[0]
-            y_min = bbox[1]
-            width = bbox[2]
-            height = bbox[3]
-            x_max = x_min + width
-            y_max = y_min + height
-
+            segmentation = dic_info["segmentation"]
+            if segmentation:
+                points = [[segmentation[0][i], segmentation[0][i+1]] for i in range(0, len(segmentation[0]), 2)]
+                shape_type = "polygon"
+            else:
+                bbox = dic_info["bbox"]
+                x_min = bbox[0]
+                y_min = bbox[1]
+                width = bbox[2]
+                height = bbox[3]
+                x_max = x_min + width
+                y_max = y_min + height
+                points = [[x_min, y_min], [x_max, y_max]]
+                shape_type = "rectangle"
+            
             shape_info = {
                 "label": self.classes[dic_info["category_id"]-1],
                 "text": None,
-                "points": [[x_min, y_min], [x_max, y_max]],
+                "points": points,
                 "group_id": None,
-                "shape_type": "rectangle",
+                "shape_type": shape_type,
                 "flags": {}
             }
-
+            
             total_info[dic_info["image_id"]]["shapes"].append(shape_info)
     
         for dic_info in tqdm(total_info.values(), desc='Converting files', unit='file', colour='green'):
